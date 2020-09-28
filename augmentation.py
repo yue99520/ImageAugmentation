@@ -28,8 +28,6 @@ def generate(category_num, background, image_file_name, label_file_name):
     # 本是垂直為X，水平為Y，現在相反
     sticker_x, sticker_y, sticker_w, sticker_h = find_bounding_box(np.uint8(img), (random_position_x, random_position_y), 1)
     cv_x, cv_y, cv_w, cv_h = format_to_yolo_coordinate(background, sticker_x, sticker_y, sticker_w, sticker_h)
-    print('x: %s' % cv_x)
-    print('y: %s' % cv_y)
 
     save_label_file(label_file_name, category_num, cv_x, cv_y, cv_w, cv_h)
     cv2.imwrite(image_file_name, background)
@@ -138,7 +136,7 @@ def save_label_file(file_name, category, x, y, w, h):
     label_file.close()
 
 
-def generate_file_names(file_name, count):
+def generate_file_names(product_path, file_name, count):
     new_file_name = file_name.split('/')
     new_file_name = new_file_name[len(new_file_name) - 1]
     new_file_name_list = []
@@ -146,7 +144,7 @@ def generate_file_names(file_name, count):
 
     for i in range(1, (count + 1)):
         suffix = "_%s" % i
-        image_file_name = 'products/' + parts[0] + suffix + '.' + parts[1]
+        image_file_name = product_path + parts[0] + suffix + '.' + parts[1]
         label_file_name = image_file_name.split('.')[0] + '.txt'
         new_file_name_list.append([image_file_name, label_file_name])
 
@@ -154,11 +152,20 @@ def generate_file_names(file_name, count):
 
 
 if __name__ == '__main__':
-    category_num = 0
-    file_names = glob.glob('sources/*.JPG')
+    SOURCE_PATH = 'sources/*.JPG'
+    PRODUCT_PATH = 'products/'
+    PRODUCTION_MULTIPLE = 10
+    CLASS_NUMBER = 0
+
+    count = 1
+
+    file_names = glob.glob(SOURCE_PATH)
     for file_name in file_names:
-        file_name_list = generate_file_names(file_name, 3)
+        file_name_list = generate_file_names(PRODUCT_PATH, file_name, PRODUCTION_MULTIPLE)
         for (image_file_name, label_file_name) in file_name_list:
             background = cv2.imread(file_name)
-            generate(category_num, background, image_file_name, label_file_name)
-
+            generate(CLASS_NUMBER, background, image_file_name, label_file_name)
+            percent = count / (len(file_names) * PRODUCTION_MULTIPLE) * 100
+            percent = int(percent)
+            print('[%s%%] Output Image: ' % percent + image_file_name)
+            count += 1
