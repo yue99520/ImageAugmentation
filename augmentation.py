@@ -11,7 +11,10 @@ def generate(category_num, background, image_file_name, label_file_name):
     size = 512
     variation = 0.0003
 
-    img = generate_origin_sticker(side)
+    # img = generate_origin_sticker(side)
+
+    img = generate_origin_triangle(side, 200)
+
     img = deformation_sticker(img, size, variation)
 
     # cv2.imshow('sticker', img)
@@ -57,27 +60,41 @@ def generate_origin_sticker(side):
     return img
 
 
+def generate_origin_triangle(side, a):
+    img = np.zeros((side, side), np.uint8)
+    # pts = np.array([[side/2, 0], [0, side/2*1.73], [side, side/2*1.73]], np.int32)
+    pts = np.array([[side/2, side/5], [side/5, (side/2-side/10)*1.73], [side-side/5, (side/2-side/10)*1.73]], np.int32)
+    # pts = np.array([[side/2, side/3], [side/3, side/2*1.73], [side*2/3, side/2*1.73]], np.int32)
+    # pts = np.array([[side/2, side/2-(1.73/6*a)], [side/2-a/2, side/2+2*1.73/6*a], [side/2+a/2, side/2+2*1.73/6*a]], np.int32)
+
+    pts = pts.reshape((-1, 1, 2))
+    cv2.polylines(img, [pts], True, (255, 255, 255), 2)
+
+    return img
+
+
 def deformation_sticker(img, size, variation):
 
-    img = cv2.resize(img, (size, size), interpolation=cv2.INTER_LINEAR)
-    box = np.array([[0, 0], [0, 1], [1, 1], [1, 0]], np.float32)
-    img = cv2.warpPerspective(
-        np.float32(img),
-        cv2.getPerspectiveTransform(
-            box, np.float32(box * (1 + np.random.uniform(-variation, variation, size=box.shape)))
-        ),
-        (size, size)
-    )
-
+    # img = cv2.resize(img, (size, size), interpolation=cv2.INTER_LINEAR)
+    # box = np.array([[0, 0], [0, 1], [1, 1], [1, 0]], np.float32)
+    # img = cv2.warpPerspective(
+    #     np.float32(img),
+    #     cv2.getPerspectiveTransform(
+    #         box, np.float32(box * (1 + np.random.uniform(-variation, variation, size=box.shape)))
+    #     ),
+    #     (size, size)
+    # )
+    #
     center = (size // 2, size // 2)
     random_angle = random.randrange(0, 180)
     rotate_matrix = cv2.getRotationMatrix2D(center, random_angle, 1)
     img = cv2.warpAffine(img, rotate_matrix, (size, size))
 
-    random_size = random.randrange(300, 800)
-    random_thick = random.randrange(0, 2)
-    img = cv2.resize(img, (random_size, random_size), interpolation=cv2.INTER_LINEAR)
+    random_thick = random.randrange(1, 3)
     img = re_thick(img, random_thick)
+
+    random_size = random.randrange(300, 800)
+    img = cv2.resize(img, (random_size, random_size), interpolation=cv2.INTER_LINEAR)
 
     return img
 
@@ -152,9 +169,9 @@ def generate_file_names(product_path, file_name, count):
 
 
 if __name__ == '__main__':
-    SOURCE_PATH = 'sources/*.JPG'
+    SOURCE_PATH = 'sources/background/*.JPG'
     PRODUCT_PATH = 'products/'
-    PRODUCTION_MULTIPLE = 10
+    PRODUCTION_MULTIPLE = 15
     CLASS_NUMBER = 0
 
     count = 1
